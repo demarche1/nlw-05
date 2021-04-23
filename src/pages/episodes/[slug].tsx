@@ -60,8 +60,26 @@ const Episode = ({ episode }: EpisodeProps) => {
 export default Episode;
 
 export const getStaticPaths: GetStaticPaths = async () => {
+  const [fetchEpisodes] = useApi({
+    method: "GET",
+    url: "/episodes",
+    params: {
+      _limit: 2,
+      _sort: "id",
+      _order: "desc",
+    },
+  });
+
+  const response = await fetchEpisodes({});
+
+  const paths = response.data.map((episode) => ({
+    params: {
+      slug: episode.id,
+    },
+  }));
+
   return {
-    paths: [],
+    paths,
     fallback: "blocking",
   };
 };
