@@ -3,10 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useContext } from "react";
+
+import { convertDurationToTimeString } from "../utils/convertDurationToTimeString";
+import { PlayerContext } from "../contexts/PlayerContext";
+import useApi from "../services/api";
 
 import styles from "./home.module.scss";
-import { convertDurationToTimeString } from "../utils/convertDurationToTimeString";
-import useApi from "../services/api";
 
 type Episode = {
   id: string;
@@ -24,30 +27,39 @@ type HomeProps = {
 };
 
 export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
+  const { play } = useContext(PlayerContext);
+
   return (
     <div className={styles.homePage}>
       <section className={styles.latestEpisodes}>
         <h2>Últimos lançamentos</h2>
 
         <ul>
-          {latestEpisodes.map((item, index) => (
+          {latestEpisodes.map((episode, index) => (
             <li key={index}>
               <Image
                 width={192}
                 height={192}
-                src={item.thumbnail}
-                alt={item.title}
+                src={episode.thumbnail}
+                alt={episode.title}
                 objectFit="cover"
               />
+
               <div className={styles.episodeDetails}>
-                <Link href={`episodes/${item.id}`}>
-                  <a>{item.title}</a>
+                <Link href={`/episodes/${episode.id}`}>
+                  <a>{episode.title}</a>
                 </Link>
-                <p>{item.members}</p>
-                <span>{item.publishedAt}</span>
-                <span>{item.durationAsString}</span>
+                <p>{episode.members}</p>
+                <span>{episode.publishedAt}</span>
+                <span>{episode.durationAsString}</span>
               </div>
-              <button type="button">
+
+              <button
+                type="button"
+                onClick={() => {
+                  play(episode);
+                }}
+              >
                 <img src="/play-green.svg" alt="Tocar episódio"></img>
               </button>
             </li>
@@ -67,25 +79,25 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
             </tr>
           </thead>
           <tbody>
-            {allEpisodes.map((item) => (
-              <tr key={item.id}>
+            {allEpisodes.map((episode) => (
+              <tr key={episode.id}>
                 <td style={{ width: 72 }}>
                   <Image
                     width={120}
                     height={120}
-                    src={item.thumbnail}
-                    alt={item.title}
+                    src={episode.thumbnail}
+                    alt={episode.title}
                     objectFit="cover"
                   />
                 </td>
                 <td>
-                  <Link href={`episodes/${item.id}`}>
-                    <a>{item.title}</a>
+                  <Link href={`/episodes/${episode.id}`}>
+                    <a>{episode.title}</a>
                   </Link>
                 </td>
-                <td>{item.members}</td>
-                <td style={{ width: 100 }}>{item.publishedAt}</td>
-                <td>{item.durationAsString}</td>
+                <td>{episode.members}</td>
+                <td style={{ width: 100 }}>{episode.publishedAt}</td>
+                <td>{episode.durationAsString}</td>
                 <td>
                   <button type="button">
                     <img src="/play-green.svg" alt="Tocar episódio" />
@@ -129,7 +141,7 @@ export const getStaticProps: GetStaticProps = async () => {
   }));
 
   const latestEpisodes = episodes.slice(0, 2);
-  const allEpisodes = episodes.slice(0, episodes.length);
+  const allEpisodes = episodes.slice(2, episodes.length);
 
   return {
     props: {
